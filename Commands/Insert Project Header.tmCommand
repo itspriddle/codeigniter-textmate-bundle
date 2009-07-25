@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>beforeRunningCommand</key>
+	<string>nop</string>
+	<key>command</key>
+	<string>#!/usr/bin/ruby
+
+puts '/**'
+
+@tags = []
+type = ''
+
+def tag(tag, default, trailing = nil)
+        @tags &lt;&lt; {:tag =&gt; tag, :default =&gt; default, :trailing =&gt; trailing}
+end
+
+year = Time.now.year
+
+tag 'package', '${CIDOC_PACKAGE:default}'
+tag 'author', '${CIDOC_AUTHOR:$TM_FULLNAME}'
+tag 'copyright', "Copyright (c) #{year}, ${CIDOC_ORGANIZATION_NAME:$TM_ORGANIZATION_NAME}"
+tag 'link', '${CIDOC_LINK:link}'
+tag 'version', '${CIDOC_VERSION:1.0}'
+tag 'filesource', nil
+
+
+puts " * ${CIDOC_PACKAGE:default}"
+puts ' *'
+puts " * ${1:${CIDOC_PACKAGE_DESC:Package description}}"
+puts ' *' if @tags.size &gt; 0
+
+placeholder = 2
+@tags.each do |tag|
+  placeholder += 1
+  tab = "\t"
+  tab = "\t\t" if "#{tag[:tag]}".length &lt; 8
+  tab = nil if tag[:default] == nil
+  if tag[:trailing]
+    puts " * @#{tag[:tag]}#{tab}${#{placeholder}:#{tag[:default]}}#{tab}#{tag[:trailing]}\t\$#{placeholder += 1}"
+  else
+    puts " * @#{tag[:tag]}#{tab}${#{placeholder}:#{tag[:default]}}"
+  end
+end
+
+puts ' */$0'</string>
+	<key>input</key>
+	<string>document</string>
+	<key>name</key>
+	<string>Insert Project Header</string>
+	<key>output</key>
+	<string>insertAsSnippet</string>
+	<key>scope</key>
+	<string>source.php</string>
+	<key>tabTrigger</key>
+	<string>ciheader</string>
+	<key>uuid</key>
+	<string>F358A315-146A-44F3-8095-7533F125FDDD</string>
+</dict>
+</plist>

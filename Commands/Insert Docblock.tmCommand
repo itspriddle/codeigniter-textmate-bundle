@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>beforeRunningCommand</key>
+	<string>nop</string>
+	<key>command</key>
+	<string>#!/usr/bin/ruby
+
+next_line = STDIN.read.to_a[ENV['TM_LINE_NUMBER'].to_i..-1].join("\n").strip[/.+$/]
+
+puts '/**'
+
+@tags = []
+type = 'Library'
+def tag(tag, default, trailing = nil)
+        @tags &lt;&lt; {:tag =&gt; tag, :default =&gt; default, :trailing =&gt; trailing}
+end
+
+case next_line
+when /class\s*\w+\s*(extends\s+)?(model|controller)?/i
+        type = $2.capitalize if $2 != nil
+        tag 'package', '${CIDOC_PACKAGE:default}'
+        tag 'subpackage', !$2.nil? ? $2.capitalize + 's' : 'Libraries'
+        tag 'category', !$2.nil? ? $2.capitalize + 's' : 'Libraries'
+        tag 'author', '${CIDOC_AUTHOR:$TM_FULLNAME}'
+when /(public|private|static)?\s*function\s*\w+\((.*)\)/i
+        type = 'function'
+        tag 'access', !$1.nil? ? $1 : 'public'
+        $2.split(/,/).each do |arg|
+                tag 'param', 'string', '\\$' + arg[/[A-z0-9]+/].strip
+        end
+        tag 'return', 'void'
+when /const|define/
+        type = 'constant'
+when /var|p(ublic|rivate|rotected)\s*\$/
+        type = 'variable'
+        tag 'var', 'string'
+end
+
+puts " * ${1:Undocumented #{type}}"
+puts ' *' if @tags.size &gt; 0
+
+placeholder = 1
+@tags.each do |tag|
+  placeholder += 1
+  tab = "\t"
+  tab = "\t\t" if type =~ /Controller|Model|Library|Class/i &amp;&amp; "#{tag[:tag]}".length &lt; 8
+  if tag[:trailing]
+    puts " * @#{tag[:tag]}#{tab}${#{placeholder}:#{tag[:default]}}#{tab}#{tag[:trailing]}\t\$#{placeholder += 1}"
+  else
+    puts " * @#{tag[:tag]}#{tab}${#{placeholder}:#{tag[:default]}}"
+  end
+end
+
+puts ' */$0'</string>
+	<key>fallbackInput</key>
+	<string>document</string>
+	<key>input</key>
+	<string>document</string>
+	<key>name</key>
+	<string>Insert Docblock</string>
+	<key>output</key>
+	<string>insertAsSnippet</string>
+	<key>scope</key>
+	<string>source.php</string>
+	<key>tabTrigger</key>
+	<string>cidoc</string>
+	<key>uuid</key>
+	<string>9ABEB02A-FE1C-40E3-BAEA-C18DBDAB1836</string>
+</dict>
+</plist>
